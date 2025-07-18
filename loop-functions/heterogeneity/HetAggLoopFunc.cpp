@@ -66,6 +66,31 @@ void HetAggLoopFunction::Init(TConfigurationNode& t_tree) {
     ComputeWallVertices(m_unNumberEdges);
     m_pcArena->SetArenaColor(CColor::BLACK);
 
+    m_vecVertexColors.clear();
+    for (size_t i = 0; i < m_vecWallVertices.size(); ++i) {
+        m_vecVertexColors.push_back(CColor::GRAY40);  // GRAY40 or other color to visualize the aggregation area
+    }
+
+    m_unAggRadious = 0.35; // Change to increment the aggregation area
+
+    // Wall IDs - 1-based in SetBoxColor, so subtract 1
+    m_mapBoxToVertex[{4-1, 4-1}] = 4;  // Vertex 4
+    m_mapBoxToVertex[{1-1, 3-1}] = 4;
+
+    m_mapBoxToVertex[{4-1, 3-1}] = 3;  // Vertex 3
+    m_mapBoxToVertex[{1-1, 2-1}] = 3;
+
+    m_mapBoxToVertex[{4-1, 2-1}] = 2;
+    m_mapBoxToVertex[{1-1, 1-1}] = 2;
+
+    m_mapBoxToVertex[{4-1, 1-1}] = 1;
+    m_mapBoxToVertex[{1-1, 6-1}] = 1;
+
+    m_mapBoxToVertex[{4-1, 6-1}] = 0;
+    m_mapBoxToVertex[{1-1, 5-1}] = 0;
+
+    m_mapBoxToVertex[{1-1, 4-1}] = 5;
+    m_mapBoxToVertex[{4-1, 5-1}] = 5;
 }
 
 /****************************************/
@@ -100,7 +125,6 @@ void HetAggLoopFunction::PostStep() {
 /****************************************/
 
 void HetAggLoopFunction::PostExperiment() {
-    ScoreControl();
     if (m_bMaximization == true){
         LOG << -m_fObjectiveFunction << std::endl;
     }
@@ -129,58 +153,73 @@ void HetAggLoopFunction::ArenaControl() {
     if (m_unClock == 1) {
         m_pcArena->SetBoxColor(4,4,CColor::RED);
         m_pcArena->SetBoxColor(1,3,CColor::RED);
-        LOG << GetBoxPosition(3,2) << std::endl;
+        // SetVertexColorFromBoxes(4,4, 1,2, CColor::RED); //only for debug 
     }
 
     else if (m_unClock == 500) {
-        ScoreControl();
-
         m_pcArena->SetBoxColor(4,4,CColor::BLACK);
         m_pcArena->SetBoxColor(1,3,CColor::BLACK);
 
         m_pcArena->SetBoxColor(4,3,CColor::YELLOW);
         m_pcArena->SetBoxColor(1,2,CColor::YELLOW);
+
+        // SetVertexColorFromBoxes(4,3, 1,2, CColor::YELLOW); //only for debug 
+        ScoreControl(4, 4, 1, 3);
     }
 
     else if (m_unClock == 1000) {
-        ScoreControl();
 
         m_pcArena->SetBoxColor(4,3,CColor::BLACK);
         m_pcArena->SetBoxColor(1,2,CColor::BLACK);
 
         m_pcArena->SetBoxColor(4,2,CColor::GREEN);
         m_pcArena->SetBoxColor(1,1,CColor::GREEN);
+
+        // SetVertexColorFromBoxes(4,2, 1,1, CColor::GREEN); //only for debug
+        ScoreControl(4, 3, 1, 2);
     }
 
     else if (m_unClock == 1500) {
-        ScoreControl();
 
         m_pcArena->SetBoxColor(4,2,CColor::BLACK);
         m_pcArena->SetBoxColor(1,1,CColor::BLACK);
 
         m_pcArena->SetBoxColor(4,1,CColor::BLUE);
         m_pcArena->SetBoxColor(1,6,CColor::BLUE); 
+
+        // SetVertexColorFromBoxes(4,1, 1,6, CColor::BLUE); //only for debug
+        ScoreControl(4, 2, 1, 1);
     }
 
     else if (m_unClock == 2000) {
-        ScoreControl();
 
         m_pcArena->SetBoxColor(4,1,CColor::BLACK);
         m_pcArena->SetBoxColor(1,6,CColor::BLACK);
 
         m_pcArena->SetBoxColor(4,6,CColor::CYAN);
         m_pcArena->SetBoxColor(1,5,CColor::CYAN); 
+
+        // SetVertexColorFromBoxes(4,6, 1,5, CColor::CYAN); //only for debug
+        ScoreControl(4,1, 1,6);
+
     }
 
     else if (m_unClock == 2500) {
-        ScoreControl();
 
         m_pcArena->SetBoxColor(4,6,CColor::BLACK);
         m_pcArena->SetBoxColor(1,5,CColor::BLACK);
 
         m_pcArena->SetBoxColor(1,4,CColor::MAGENTA);
         m_pcArena->SetBoxColor(4,5,CColor::MAGENTA);
+
+        // SetVertexColorFromBoxes(1,4, 4,5, CColor::MAGENTA); //only for debug
+        ScoreControl(4,6, 1,5);
+        
     }
+    else if (m_unClock == 3000){
+        ScoreControl(1,4, 4,5);
+    }
+   
 
     return;
 }
@@ -209,87 +248,94 @@ void HetAggLoopFunction::ComputeWallVertices(UInt32 unNumberEdges) {
 /****************************************/
 /****************************************/
 
-void HetAggLoopFunction::ScoreControl(){
+void HetAggLoopFunction::ScoreControl(UInt32 unWallA, UInt32 unBoxA, UInt32 unWallB, UInt32 unBoxB){
+                                         
+    UpdateRobotPositions();
+    m_fObjectiveFunction += ScoreFromLitCorner(unWallA, unBoxA, unWallB, unBoxB);
+
+}
+
+/****************************************/
+/****************************************/
+
+// void HetAggLoopFunction::SetVertexColorFromBoxes(UInt32 unWallA, UInt32 unBoxA,
+//                                                  UInt32 unWallB, UInt32 unBoxB,
+//                                                  const CColor& cColor) {
+//     // Convert to 0-based indices
+//     std::pair<UInt32, UInt32> boxA(unWallA - 1, unBoxA - 1);
+//     std::pair<UInt32, UInt32> boxB(unWallB - 1, unBoxB - 1);
+
+//     if (m_mapBoxToVertex.count(boxA)) {
+//         UInt32 vertex = m_mapBoxToVertex[boxA];
+//         m_vecVertexColors[vertex] = cColor;
+//     } else if (m_mapBoxToVertex.count(boxB)) {
+//         UInt32 vertex = m_mapBoxToVertex[boxB];
+//         m_vecVertexColors[vertex] = cColor;
+//     } else {
+//         LOGERR << "Could not match box pair to vertex!\n";
+//     }
+// }
+
+/****************************************/
+/****************************************/
+
+Real HetAggLoopFunction::ScoreFromLitCorner(UInt32 unWallA, UInt32 unBoxA,
+                                            UInt32 unWallB, UInt32 unBoxB) {
+    Real fScore = 0;
+
+    // Convert to 0-based indices
+    std::pair<UInt32, UInt32> boxA(unWallA - 1, unBoxA - 1);
+    std::pair<UInt32, UInt32> boxB(unWallB - 1, unBoxB - 1);
+
+    // Find corresponding vertex index
+    SInt32 vertex_index = -1;
+
+    if (m_mapBoxToVertex.count(boxA)) {
+        vertex_index = m_mapBoxToVertex[boxA];
+    } else if (m_mapBoxToVertex.count(boxB)) {
+        vertex_index = m_mapBoxToVertex[boxB];
+    } else {
+        LOGERR << "Could not find vertex index for boxes (" 
+               << unWallA << "," << unBoxA << ") and ("
+               << unWallB << "," << unBoxB << ")" << std::endl;
+        return 0;
+    }
+
+    const argos::CVector2& cVertexPos = m_vecWallVertices[vertex_index];
 
     UpdateRobotPositions();
-    Real fRadiusThreshold = 0.3;
 
-    for (auto& it : m_tRobotStates) {
-        const argos::CVector2& cRobotPos = it.second.cPosition;
+    for (const auto& it : m_tRobotStates) {
+        const argos::CVector2& cPos = it.second.cPosition;
 
-        for (const argos::CVector2& cVertex : m_vecWallVertices) {
-            
-            if ((cRobotPos - cVertex).Length() <= fRadiusThreshold) {
-                m_fObjectiveFunction += 1.0;
-            }
+        if ((cPos - cVertexPos).Length() <= m_unAggRadious) {
+            fScore += 1;
         }
     }
-    LOG << m_fObjectiveFunction << std::endl;
-    
 
-}
+    // LOG << "Robots in vertex " << vertex_index << ": " << fScore << std::endl;
 
-argos::CVector2 HetAggLoopFunction::GetBoxPosition(UInt32 unWallIdx, UInt32 unBoxIdx) {
-    CWallEntity* pcWall = m_pcArena->GetWalls().at(unWallIdx);
-    CBlockEntity* pcBlock = pcWall->GetBlocks().at(unBoxIdx);
-    const argos::CVector3& cPos3D = pcBlock->GetEmbodiedEntity().GetOriginAnchor().Position;
-    return argos::CVector2(cPos3D.GetX(), cPos3D.GetY());
+    return fScore;
 }
 
 
-
-/****************************************/
-/****************************************/
-
-Real HetAggLoopFunction::GetStopScore() {
-
-    UpdateRobotPositions();
-
-    Real unScore = 0;
-    TRobotStateMap::iterator it;
-    for (it = m_tRobotStates.begin(); it != m_tRobotStates.end(); ++it) {
-        Real d = (it->second.cPosition - it->second.cLastPosition).Length();
-        if (d > 0.0005)
-            unScore+=1;
-    }
-
-    return unScore;
-}
-
-/****************************************/
-/****************************************/
-
-Real HetAggLoopFunction::GetMoveScore() {
-
-    UpdateRobotPositions();
-
-    Real unScore = 0;
-    TRobotStateMap::iterator it;
-    for (it = m_tRobotStates.begin(); it != m_tRobotStates.end(); ++it) {
-        Real d = (it->second.cPosition - it->second.cLastPosition).Length();
-        if (d <= 0.0005)
-            unScore+=1;
-    }
-
-    return unScore;
-}
 
 /****************************************/
 /****************************************/
 
 argos::CColor HetAggLoopFunction::GetFloorColor(const argos::CVector2& c_position_on_plane) {
-    
 
-    Real fThreshold = 0.3;
+    for (size_t i = 0; i < m_vecWallVertices.size(); ++i) {
+        const argos::CVector2& cVertex = m_vecWallVertices[i];
 
-    for(const argos::CVector2& cVertex : m_vecWallVertices) {
-        if ((c_position_on_plane - cVertex).Length() <= fThreshold) {
-            return argos::CColor::GRAY40;
+        if ((c_position_on_plane - cVertex).Length() <= m_unAggRadious) {
+            return m_vecVertexColors[i];
         }
     }
 
-    return argos::CColor::GRAY50;
+    return argos::CColor::GRAY50; // default floor
 }
+
 
 /****************************************/
 /****************************************/

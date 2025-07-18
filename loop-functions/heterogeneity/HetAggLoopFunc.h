@@ -47,7 +47,7 @@ class HetAggLoopFunction: public CoreLoopFunctions {
     void InitRobotStates();
     void UpdateRobotPositions();
 
-    void ScoreControl();
+    void ScoreControl(UInt32 unWallA, UInt32 unBoxA, UInt32 unWallB, UInt32 unBoxB);
     Real GetStopScore();  
     Real GetMoveScore();
 
@@ -112,6 +112,7 @@ class HetAggLoopFunction: public CoreLoopFunctions {
     UInt32 m_unStopTime;
     UInt32 m_unStopEdge;
     UInt32 m_unStopBox;
+    Real m_unAggRadious;
     Real m_fObjectiveFunction;
 
     struct RobotStateStruct {
@@ -129,6 +130,11 @@ class HetAggLoopFunction: public CoreLoopFunctions {
     void ComputeWallVertices(UInt32 unNumberEdges);
 
     argos::CVector2 GetBoxPosition(UInt32 unWallIdx, UInt32 unBoxIdx);
+    std::vector<argos::CColor> m_vecVertexColors;
+    std::string ColorToString(const argos::CColor& c);
+    std::map<std::pair<UInt32, UInt32>, UInt32> m_mapBoxToVertex;
+    void SetVertexColorFromBoxes(UInt32 unWallA, UInt32 unBoxA,UInt32 unWallB, UInt32 unBoxB,const CColor& cColor);
+    Real ScoreFromLitCorner(UInt32 unWallA, UInt32 unBoxA, UInt32 unWallB, UInt32 unBoxB);
 
 
 };
