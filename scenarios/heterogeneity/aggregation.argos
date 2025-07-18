@@ -4,18 +4,18 @@
   <!-- * Framework * -->
   <!-- ************* -->
   <framework>
-    <experiment length="400"
-                ticks_per_second="10" random_seed="0"/>
+    <experiment length="300"
+                ticks_per_second="10" random_seed="100"/>
   </framework>
 
   <!-- ****************** -->
   <!-- * Loop functions * -->
   <!-- ****************** -->
-  <loop_functions library="/home/robotmaster/experiments-loop-functions/build/loop-functions/moca/libtutti_ag_loopfunc.so"
-   label="tutti_ag_loop_function">
+  <loop_functions library="/home/robotmaster/experiments-loop-functions/build/loop-functions/heterogeneity/libhet_agg_loopfunc.so"
+   label="het_agg_loop_function">
        <params number_robots="20"
                build_arena="true"
-               number_edges="4"
+               number_edges="6"
                number_boxes_per_edge="4"
                lenght_boxes="0.25"
                maximization="false"/>
@@ -40,13 +40,14 @@
 		    <epuck_ground implementation="rot_z_only" noise_level="0.05" calibrated="true"/>
             <epuck_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="false"/>
       </sensors>
-    <params readable="false" history='false' 
-    fsm-config="
-    --ngroups 4 
-    --g0 3 --nstates_0 2 --s0_0 9 --vel0_0 1 --cle0_0 0 --clr0_0 1 --n0_0 2 --n0x0_0 0 --c0x0_0 7 --p0x0_0 0.9 --l0x0_0 1 --n0x1_0 0 --c0x1_0 7 --p0x1_0 0.9 --l0x1_0 3 --s1_0 1 --cle1_0 3 --n1_0 1 --n1x0_0 0 --c1x0_0 5 --p1x0_0 0.9 
-    --g1 3 --nstates_1 2 --s0_1 8 --vel0_1 1.0 --cle0_1 1 --clr0_1 0 --n0_1 1 --n0x0_1 0 --c0x0_1 1 --p0x0_1 1 --s1_1 1 --cle1_1 2
-    --g2 3 --nstates_2 2 --s0_2 8 --vel0_2 1.0 --cle0_2 1 --clr0_2 0 --n0_2 1 --n0x0_2 0 --c0x0_2 1 --p0x0_2 1 --s1_2 1 --cle1_2 4
-    --g3 3 --nstates_3 2 --s0_3 8 --vel0_3 1.0 --cle0_3 1 --clr0_3 0 --n0_3 1 --n0x0_3 0 --c0x0_3 1 --p0x0_3 1 --s1_3 1 --cle1_3 5"
+    <params readable="true" history='false' fsm-config=    
+    "--ngroups 6 
+    --g0 2 --nstates_0 1 --s0_0 8 --vel0_0 1.0 --cle0_0 1 --clr0_0 2
+    --g1 2 --nstates_1 1 --s0_1 8 --vel0_1 1.0 --cle0_1 2 --clr0_1 3 
+    --g2 2 --nstates_2 1 --s0_2 8 --vel0_2 1.0 --cle0_2 3 --clr0_2 4
+    --g3 2 --nstates_3 1 --s0_3 8 --vel0_3 1.0 --cle0_3 4 --clr0_3 5
+    --g4 2 --nstates_4 1 --s0_4 8 --vel0_4 1.0 --cle0_4 5 --clr0_4 6
+    --g5 2 --nstates_5 1 --s0_5 8 --vel0_5 1.0 --cle0_5 6 --clr0_5 1"
     />
 
                                         <!-- From sa -> n0x0 sb = n0x0 sb+1, (a < b) -->
@@ -58,7 +59,7 @@
   <!-- ********* -->
   <!-- * Arena * -->
   <!-- ********* -->
-  <arena size="2, 2, 0.15" center="0,0,0.075">
+  <arena size="2.2, 2.2, 0.15" center="0,0,0.075">
 
   <!-- Change the floor here -->
   <floor id="floor" source="loop_functions" pixels_per_meter="300"/>

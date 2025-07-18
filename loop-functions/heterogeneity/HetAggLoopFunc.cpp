@@ -6,31 +6,34 @@
   * @license MIT License
   */
 
-#include "HeteroAggLoopFunc.h"
+#include "HetAggLoopFunc.h"
 
 /****************************************/
 /****************************************/
 
-TuttiAgLoopFunction::TuttiAgLoopFunction() {
+HetAggLoopFunction::HetAggLoopFunction() {
     m_unClock = 0;
+    m_unStopTime = 0;
+    m_unStopEdge = 2;
+    m_unStopBox = 2;
     m_fObjectiveFunction = 0;
 }
 
 /****************************************/
 /****************************************/
 
-TuttiAgLoopFunction::TuttiAgLoopFunction(const TuttiAgLoopFunction& orig) {
+HetAggLoopFunction::HetAggLoopFunction(const HetAggLoopFunction& orig) {
 }
 
 /****************************************/
 /****************************************/
 
-TuttiAgLoopFunction::~TuttiAgLoopFunction() {}
+HetAggLoopFunction::~HetAggLoopFunction() {}
 
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::Destroy() {
+void HetAggLoopFunction::Destroy() {
 
     m_tRobotStates.clear();
     RemoveArena();
@@ -39,7 +42,7 @@ void TuttiAgLoopFunction::Destroy() {
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::Init(TConfigurationNode& t_tree) {
+void HetAggLoopFunction::Init(TConfigurationNode& t_tree) {
 
     CoreLoopFunctions::Init(t_tree);
     TConfigurationNode cParametersNode;
@@ -60,6 +63,7 @@ void TuttiAgLoopFunction::Init(TConfigurationNode& t_tree) {
     }
 
     InitRobotStates();
+    ComputeWallVertices(m_unNumberEdges);
     m_pcArena->SetArenaColor(CColor::BLACK);
 
 }
@@ -67,34 +71,36 @@ void TuttiAgLoopFunction::Init(TConfigurationNode& t_tree) {
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::Reset() {
+void HetAggLoopFunction::Reset() {
     CoreLoopFunctions::Reset();
 
+    m_pcArena->SetArenaColor(CColor::BLACK);
     m_unClock = 0;
+    m_unStopEdge = 2;
+    m_unStopBox = 2;
+    m_unStopTime = 0;
     m_fObjectiveFunction = 0;
 
     m_tRobotStates.clear();
 
     InitRobotStates();
-    m_pcArena->SetArenaColor(CColor::BLACK);
 }
 
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::PostStep() {
+void HetAggLoopFunction::PostStep() {
 
     m_unClock = GetSpace().GetSimulationClock();
 
-    ScoreControl();
     ArenaControl();
-
 }
 
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::PostExperiment() {
+void HetAggLoopFunction::PostExperiment() {
+    ScoreControl();
     if (m_bMaximization == true){
         LOG << -m_fObjectiveFunction << std::endl;
     }
@@ -106,7 +112,7 @@ void TuttiAgLoopFunction::PostExperiment() {
 /****************************************/
 /****************************************/
 
-Real TuttiAgLoopFunction::GetObjectiveFunction() {
+Real HetAggLoopFunction::GetObjectiveFunction() {
     if (m_bMaximization == true){
         return -m_fObjectiveFunction;
     }
@@ -118,15 +124,62 @@ Real TuttiAgLoopFunction::GetObjectiveFunction() {
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::ArenaControl() {
-
+void HetAggLoopFunction::ArenaControl() {
+    
     if (m_unClock == 1) {
-        m_pcArena->SetWallColor(1,CColor::BLUE);
-        m_pcArena->SetWallColor(2,CColor::BLUE);
-        m_pcArena->SetWallColor(4,CColor::GREEN);
-        m_pcArena->SetWallColor(5,CColor::GREEN);
-        m_pcArena->SetBoxColor(1,5,CColor::RED);
-        
+        m_pcArena->SetBoxColor(4,4,CColor::RED);
+        m_pcArena->SetBoxColor(1,3,CColor::RED);
+        LOG << GetBoxPosition(3,2) << std::endl;
+    }
+
+    else if (m_unClock == 500) {
+        ScoreControl();
+
+        m_pcArena->SetBoxColor(4,4,CColor::BLACK);
+        m_pcArena->SetBoxColor(1,3,CColor::BLACK);
+
+        m_pcArena->SetBoxColor(4,3,CColor::YELLOW);
+        m_pcArena->SetBoxColor(1,2,CColor::YELLOW);
+    }
+
+    else if (m_unClock == 1000) {
+        ScoreControl();
+
+        m_pcArena->SetBoxColor(4,3,CColor::BLACK);
+        m_pcArena->SetBoxColor(1,2,CColor::BLACK);
+
+        m_pcArena->SetBoxColor(4,2,CColor::GREEN);
+        m_pcArena->SetBoxColor(1,1,CColor::GREEN);
+    }
+
+    else if (m_unClock == 1500) {
+        ScoreControl();
+
+        m_pcArena->SetBoxColor(4,2,CColor::BLACK);
+        m_pcArena->SetBoxColor(1,1,CColor::BLACK);
+
+        m_pcArena->SetBoxColor(4,1,CColor::BLUE);
+        m_pcArena->SetBoxColor(1,6,CColor::BLUE); 
+    }
+
+    else if (m_unClock == 2000) {
+        ScoreControl();
+
+        m_pcArena->SetBoxColor(4,1,CColor::BLACK);
+        m_pcArena->SetBoxColor(1,6,CColor::BLACK);
+
+        m_pcArena->SetBoxColor(4,6,CColor::CYAN);
+        m_pcArena->SetBoxColor(1,5,CColor::CYAN); 
+    }
+
+    else if (m_unClock == 2500) {
+        ScoreControl();
+
+        m_pcArena->SetBoxColor(4,6,CColor::BLACK);
+        m_pcArena->SetBoxColor(1,5,CColor::BLACK);
+
+        m_pcArena->SetBoxColor(1,4,CColor::MAGENTA);
+        m_pcArena->SetBoxColor(4,5,CColor::MAGENTA);
     }
 
     return;
@@ -135,24 +188,68 @@ void TuttiAgLoopFunction::ArenaControl() {
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::ScoreControl(){
+void HetAggLoopFunction::ComputeWallVertices(UInt32 unNumberEdges) {
+    Real fRadious =  (m_fLenghtBoxes*m_unNumberBoxes) / (2 * Tan(CRadians::PI / m_unNumberEdges)) + 0.1;
+    m_vecWallVertices.clear();
 
-    m_fObjectiveFunction += GetAggregationScore();
+    Real fAngleStep = (2.0 * argos::CRadians::PI).GetValue() / unNumberEdges;
+
+    // Shift angle by half a step to land on corners
+    Real fAngleOffset = -0.5 * fAngleStep;
+
+    for(UInt32 i = 0; i < unNumberEdges; ++i) {
+        Real fAngle = i * fAngleStep + fAngleOffset;
+        argos::CVector2 vertex(std::cos(fAngle), std::sin(fAngle));
+        vertex *= fRadious;
+        m_vecWallVertices.push_back(vertex);
+    }
 }
 
+
 /****************************************/
 /****************************************/
 
-Real TuttiAgLoopFunction::GetAggregationScore() {
+void HetAggLoopFunction::ScoreControl(){
+
+    UpdateRobotPositions();
+    Real fRadiusThreshold = 0.3;
+
+    for (auto& it : m_tRobotStates) {
+        const argos::CVector2& cRobotPos = it.second.cPosition;
+
+        for (const argos::CVector2& cVertex : m_vecWallVertices) {
+            
+            if ((cRobotPos - cVertex).Length() <= fRadiusThreshold) {
+                m_fObjectiveFunction += 1.0;
+            }
+        }
+    }
+    LOG << m_fObjectiveFunction << std::endl;
+    
+
+}
+
+argos::CVector2 HetAggLoopFunction::GetBoxPosition(UInt32 unWallIdx, UInt32 unBoxIdx) {
+    CWallEntity* pcWall = m_pcArena->GetWalls().at(unWallIdx);
+    CBlockEntity* pcBlock = pcWall->GetBlocks().at(unBoxIdx);
+    const argos::CVector3& cPos3D = pcBlock->GetEmbodiedEntity().GetOriginAnchor().Position;
+    return argos::CVector2(cPos3D.GetX(), cPos3D.GetY());
+}
+
+
+
+/****************************************/
+/****************************************/
+
+Real HetAggLoopFunction::GetStopScore() {
 
     UpdateRobotPositions();
 
-    bool bInAgg;
     Real unScore = 0;
     TRobotStateMap::iterator it;
     for (it = m_tRobotStates.begin(); it != m_tRobotStates.end(); ++it) {
-        bInAgg = IsRobotInAgg(it->second.cPosition);
-        if (!bInAgg)
+        Real d = (it->second.cPosition - it->second.cLastPosition).Length();
+        if (d > 0.0005)
             unScore+=1;
     }
 
@@ -162,32 +259,42 @@ Real TuttiAgLoopFunction::GetAggregationScore() {
 /****************************************/
 /****************************************/
 
-argos::CColor TuttiAgLoopFunction::GetFloorColor(const argos::CVector2& c_position_on_plane) {
+Real HetAggLoopFunction::GetMoveScore() {
 
-    if (c_position_on_plane.GetY() <= -0.50 || c_position_on_plane.GetY() >= 0.50){
-        return CColor::BLACK;
+    UpdateRobotPositions();
+
+    Real unScore = 0;
+    TRobotStateMap::iterator it;
+    for (it = m_tRobotStates.begin(); it != m_tRobotStates.end(); ++it) {
+        Real d = (it->second.cPosition - it->second.cLastPosition).Length();
+        if (d <= 0.0005)
+            unScore+=1;
     }
 
-    return CColor::GRAY50;
-}
-
-
-/****************************************/
-/****************************************/
-
-bool TuttiAgLoopFunction::IsRobotInAgg (CVector2 tRobotPosition) {
-
-    if (tRobotPosition.GetY() >= 0.465){
-        return true;
-    }
-
-    return false;
+    return unScore;
 }
 
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::UpdateRobotPositions() {
+argos::CColor HetAggLoopFunction::GetFloorColor(const argos::CVector2& c_position_on_plane) {
+    
+
+    Real fThreshold = 0.3;
+
+    for(const argos::CVector2& cVertex : m_vecWallVertices) {
+        if ((c_position_on_plane - cVertex).Length() <= fThreshold) {
+            return argos::CColor::GRAY40;
+        }
+    }
+
+    return argos::CColor::GRAY50;
+}
+
+/****************************************/
+/****************************************/
+
+void HetAggLoopFunction::UpdateRobotPositions() {
     CSpace::TMapPerType& tEpuckMap = GetSpace().GetEntitiesByType("epuck");
     CVector2 cEpuckPosition(0,0);
     for (CSpace::TMapPerType::iterator it = tEpuckMap.begin(); it != tEpuckMap.end(); ++it) {
@@ -203,7 +310,7 @@ void TuttiAgLoopFunction::UpdateRobotPositions() {
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::InitRobotStates() {
+void HetAggLoopFunction::InitRobotStates() {
 
     CSpace::TMapPerType& tEpuckMap = GetSpace().GetEntitiesByType("epuck");
     CVector2 cEpuckPosition(0,0);
@@ -221,7 +328,7 @@ void TuttiAgLoopFunction::InitRobotStates() {
 /****************************************/
 /****************************************/
 
-CVector3 TuttiAgLoopFunction::GetRandomPosition() {
+CVector3 HetAggLoopFunction::GetRandomPosition() {
   Real temp;
   Real a = m_pcRng->Uniform(CRange<Real>(0.0f, 1.0f));
   Real b = m_pcRng->Uniform(CRange<Real>(0.0f, 1.0f));
@@ -233,9 +340,9 @@ CVector3 TuttiAgLoopFunction::GetRandomPosition() {
     a = b;
     b = temp;
   }
-  m_fDistributionRadius = 0.25;
-  Real fPosX = (c * m_fDistributionRadius) + m_fDistributionRadius * cos(2 * CRadians::PI.GetValue() * (a/b));
-  Real fPosY = (d * m_fDistributionRadius) + m_fDistributionRadius * sin(2 * CRadians::PI.GetValue() * (a/b));
+  m_fDistributionRadius = 0.4;
+  Real fPosX = (c * m_fDistributionRadius / 2) + m_fDistributionRadius * cos(2 * -CRadians::PI_OVER_TWO .GetValue() * (a/b));
+  Real fPosY = -0.20 + (d * m_fDistributionRadius / 2) + m_fDistributionRadius * sin(2 * -CRadians::PI_OVER_TWO.GetValue() * (a/b));
 
   return CVector3(fPosX, fPosY, 0);
 }
@@ -243,7 +350,16 @@ CVector3 TuttiAgLoopFunction::GetRandomPosition() {
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::PositionArena() {
+UInt32 HetAggLoopFunction::GetRandomTime(UInt32 unMin, UInt32 unMax) {
+  UInt32 unStopAt = m_pcRng->Uniform(CRange<UInt32>(unMin, unMax));
+  return unStopAt;
+
+}
+
+/****************************************/
+/****************************************/
+
+void HetAggLoopFunction::PositionArena() {
   CArenaEntity* pcArena;
   /*
     pcArena = new CArenaEntity("arena",
@@ -273,7 +389,7 @@ void TuttiAgLoopFunction::PositionArena() {
 /****************************************/
 /****************************************/
 
-void TuttiAgLoopFunction::RemoveArena() {
+void HetAggLoopFunction::RemoveArena() {
     std::ostringstream id;
     id << "arena";
     RemoveEntity(id.str().c_str());
@@ -282,7 +398,7 @@ void TuttiAgLoopFunction::RemoveArena() {
 /****************************************/
 /****************************************/
 
-Real TuttiAgLoopFunction::GetArenaRadious() {
+Real HetAggLoopFunction::GetArenaRadious() {
 
     Real fRadious;
     fRadious =  (m_fLenghtBoxes*m_unNumberBoxes) / (2 * Tan(CRadians::PI / m_unNumberEdges));
@@ -295,7 +411,7 @@ Real TuttiAgLoopFunction::GetArenaRadious() {
 /****************************************/
 /****************************************/
 
-bool TuttiAgLoopFunction::IsEven(UInt32 unNumber) {
+bool HetAggLoopFunction::IsEven(UInt32 unNumber) {
     bool even;
     if((unNumber%2)==0)
        even = true;
@@ -308,4 +424,4 @@ bool TuttiAgLoopFunction::IsEven(UInt32 unNumber) {
 /****************************************/
 /****************************************/
 
-REGISTER_LOOP_FUNCTIONS(TuttiAgLoopFunction, "hetero_agg_loop_function");
+REGISTER_LOOP_FUNCTIONS(HetAggLoopFunction, "het_agg_loop_function");

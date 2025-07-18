@@ -5,5 +5,5 @@ link_directories(
 	${CMAKE_BINARY_DIR}/src
     )
 
-add_library(hetero_agg_loopfunc SHARED HeteroAggLoopFunc.h HeteroAggLoopFunc.cpp)
-target_link_libraries(hetero_agg_loopfunc argos3plugin_${ARGOS_BUILD_FOR}_epuck)
+add_library(het_agg_loopfunc SHARED HetAggLoopFunc.h HetAggLoopFunc.cpp)
+target_link_libraries(het_agg_loopfunc argos3plugin_${ARGOS_BUILD_FOR}_epuck)
