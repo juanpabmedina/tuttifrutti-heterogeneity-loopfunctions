@@ -68,7 +68,7 @@ void HetAggLoopFunction::Init(TConfigurationNode& t_tree) {
 
     m_vecVertexColors.clear();
     for (size_t i = 0; i < m_vecWallVertices.size(); ++i) {
-        m_vecVertexColors.push_back(CColor::GRAY40);  // GRAY40 or other color to visualize the aggregation area
+        m_vecVertexColors.push_back(CColor::GRAY50);  // GRAY40 or other color to visualize the aggregation area
     }
 
     m_unAggRadious = 0.35; // Change to increment the aggregation area

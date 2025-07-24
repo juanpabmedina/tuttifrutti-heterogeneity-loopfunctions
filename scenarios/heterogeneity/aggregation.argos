@@ -5,7 +5,7 @@
   <!-- ************* -->
   <framework>
     <experiment length="300"
-                ticks_per_second="10" random_seed="100"/>
+                ticks_per_second="10" random_seed="1"/>
   </framework>
 
   <!-- ****************** -->
@@ -40,7 +40,7 @@
 		    <epuck_ground implementation="rot_z_only" noise_level="0.05" calibrated="true"/>
             <epuck_omnidirectional_camera implementation="rot_z_only" medium="leds" show_rays="false"/>
       </sensors>
-    <params readable="true" history='false' fsm-config=    
+    <params readable="false" history='false' fsm-config=    
     "--ngroups 6 
     --g0 2 --nstates_0 1 --s0_0 8 --vel0_0 1.0 --cle0_0 1 --clr0_0 2
     --g1 2 --nstates_1 1 --s0_1 8 --vel0_1 1.0 --cle0_1 2 --clr0_1 3 
